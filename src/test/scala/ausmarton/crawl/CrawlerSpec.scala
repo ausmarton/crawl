@@ -20,14 +20,14 @@ class CrawlerSpec
       "<a href='/a'>A</a>" +
       "<a href='/b'>B</a>" +
       "<a href='/c'>C</a>" +
-      "<a href='http://www.google.com/' title='Google'>" +
+      "<a href='http://www.google.com/'>Google</a>" +
       "</body></html>"
     val childPageHtml = "<html><body>" +
       "<a href='/a'>A</a>" +
       "<a href='/b'>B</a>" +
       "<a href='/c'>C</a>" +
       "<a href='/d'>D</a>" +
-      "<a href='http://www.google.com/' title='Google'>" +
+      "<a href='http://www.google.com/'>Google</a>" +
       "</body></html>"
 
     def response = (h: String) => aResponse()
@@ -58,7 +58,8 @@ class CrawlerSpec
         Link("http://localhost:8080/b","B",visited = true).leaf,
         Link("http://localhost:8080/c","C",visited = true).node(
           Link("http://localhost:8080/d","D",visited = true).leaf
-        )
+        ),
+        Link("http://www.google.com/","Google",external = true).leaf
       ).flatten
       Crawler.start("http://localhost:8080").flatten shouldBe expectedSiteMap
     }
