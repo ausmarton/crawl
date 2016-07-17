@@ -14,16 +14,16 @@ class CrawlerSpec
     configureFor("localhost",8080)
 
     val homeHtml = "<html><body>" +
-      "<a href='/a' title='A'>" +
-      "<a href='/b' title='B'>" +
-      "<a href='/c' title='C'>" +
+      "<a href='/a'>A</a>" +
+      "<a href='/b'>B</a>" +
+      "<a href='/c'>C</a>" +
       "<a href='http://www.google.com/' title='Google'>" +
       "</body></html>"
     val childPageHtml = "<html><body>" +
-      "<a href='/a' title='A'>" +
-      "<a href='/b' title='B'>" +
-      "<a href='/c' title='C'>" +
-      "<a href='/d' title='D'>" +
+      "<a href='/a'>A</a>" +
+      "<a href='/b'>B</a>" +
+      "<a href='/c'>C</a>" +
+      "<a href='/d'>D</a>" +
       "<a href='http://www.google.com/' title='Google'>" +
       "</body></html>"
 
@@ -50,7 +50,13 @@ class CrawlerSpec
 
   "Crawler" should {
     "Respond with links" in {
-      Crawler.start("http://localhost:8080/") shouldBe List("/a", "/b", "/c", "http://www.google.com/")
+      Crawler.start("http://localhost:8080") shouldBe List(
+        Link("http://localhost:8080","root",visited = true),
+        Link("http://localhost:8080/a","A",visited = true),
+        Link("http://localhost:8080/b","B",visited = true),
+        Link("http://localhost:8080/c","C",visited = true),
+        Link("http://localhost:8080/d","D",visited = true)
+      )
     }
   }
 
