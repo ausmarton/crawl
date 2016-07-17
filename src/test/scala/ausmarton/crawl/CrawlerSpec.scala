@@ -20,12 +20,14 @@ class CrawlerSpec
       "<a href='/a'>A</a>" +
       "<a href='/b'>B</a>" +
       "<a href='/c'>C</a>" +
+      "<img src='/c/icon.jpg' title='Icon'></img>" +
       "<a href='http://www.google.com/'>Google</a>" +
       "</body></html>"
     val childPageHtml = "<html><body>" +
       "<a href='/a'>A</a>" +
       "<a href='/b'>B</a>" +
       "<a href='/c'>C</a>" +
+      "<img src='/icon2.jpg' title='Icon 2'></img>" +
       "<a href='/d'>D</a>" +
       "<a href='http://www.google.com/'>Google</a>" +
       "</body></html>"
@@ -56,11 +58,14 @@ class CrawlerSpec
       val expectedSiteMap = Link("http://localhost:8080","root",visited = true).node(
         Link("http://localhost:8080/a","A",visited = true).leaf,
         Link("http://localhost:8080/b","B",visited = true).leaf,
-        Link("http://localhost:8080/c","C",visited = true).node(
-          Link("http://localhost:8080/d","D",visited = true).leaf
+          Link("http://localhost:8080/c","C",visited = true).node(
+          Link("http://localhost:8080/d","D",visited = true).leaf,
+          Link("/icon2.jpg","Icon 2",crawlable = false).leaf
         ),
-        Link("http://www.google.com/","Google",external = true).leaf
+        Link("/c/icon.jpg","Icon",crawlable = false).leaf,
+        Link("http://www.google.com/","Google",crawlable = false).leaf
       ).flatten
+
       Crawler.start("http://localhost:8080").flatten shouldBe expectedSiteMap
     }
   }
