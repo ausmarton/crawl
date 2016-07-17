@@ -1,16 +1,16 @@
 package ausmarton.crawl
 
-import java.net.URL
 
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scalaz.{State, Tree}
+import scalaz._
+import scalaz.Scalaz._
 
-case class Link(url: String, name: String, visited: Boolean = false)
+case class Link(url: String, name: String, visited: Boolean = false) {
+  override def toString: String = s"Link=$url :: Name=$name :: visited=$visited"
+}
 
 object Crawler extends App {
 
@@ -18,26 +18,28 @@ object Crawler extends App {
     args.headOption.map(start)
   }
 
-  type SiteMap = List[Link]
-
+  type SiteMap = Tree[Link]
 
   def start(urlSpec: String): SiteMap = {
-    crawl(List(Link(urlSpec,"root")),urlSpec)
+    crawl(scalaz.Tree(Link(urlSpec,"root")),urlSpec)
   }
 
   @tailrec
   def crawl(siteMap: SiteMap, hostDomain: String): SiteMap = {
-    siteMap.filterNot(_.visited).headOption match {
+    siteMap.flatten.filterNot(_.visited).headOption match {
       case Some(link) => {
         val internalLinks = follow(link.url)
           .filterKeys(_.startsWith("/"))
           .map(l => Link(hostDomain+l._1, l._2))
-          .filter(l => !siteMap.exists(_.url == l.url))
-        val links : List[Link] = siteMap.map({
-          case Link(link.url,_,false) => link.copy(visited = true)
-          case x:Link => x
-        })
-        crawl((links ++ internalLinks).distinct, hostDomain)
+          .filter(l => !siteMap.flatten.exists(_.url == l.url))
+
+        val newTree = Tree.node(link.copy(visited = true),internalLinks.map(l => l.leaf).toStream)
+
+        val newSiteMap = siteMap.flatMap(n => if(n.url == newTree.rootLabel.url) newTree else Tree(n))
+
+        println(newSiteMap.cobind(n => n.getClass.getSimpleName+n.rootLabel.toString).drawTree)
+
+        crawl(newSiteMap, hostDomain)
       }
       case None => siteMap
     }

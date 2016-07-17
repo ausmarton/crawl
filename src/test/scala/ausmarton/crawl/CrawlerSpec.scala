@@ -1,8 +1,11 @@
 package ausmarton.crawl
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, configureFor, stubFor, urlEqualTo}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+
+import scalaz.Scalaz._
 
 class CrawlerSpec
   extends WordSpecLike with Matchers with BeforeAndAfterAll {
@@ -32,15 +35,15 @@ class CrawlerSpec
       .withBody(h)
       .withStatus(200)
 
-    stubFor(get(urlEqualTo("/"))
+    stubFor(WireMock.get(urlEqualTo("/"))
       .willReturn(response(homeHtml)))
-    stubFor(get(urlEqualTo("/a"))
+    stubFor(WireMock.get(urlEqualTo("/a"))
       .willReturn(response(homeHtml)))
-    stubFor(get(urlEqualTo("/b"))
+    stubFor(WireMock.get(urlEqualTo("/b"))
       .willReturn(response(homeHtml)))
-    stubFor(get(urlEqualTo("/c"))
+    stubFor(WireMock.get(urlEqualTo("/c"))
       .willReturn(response(childPageHtml)))
-    stubFor(get(urlEqualTo("/d"))
+    stubFor(WireMock.get(urlEqualTo("/d"))
       .willReturn(response(homeHtml)))
   }
 
@@ -50,13 +53,14 @@ class CrawlerSpec
 
   "Crawler" should {
     "Respond with links" in {
-      Crawler.start("http://localhost:8080") shouldBe List(
-        Link("http://localhost:8080","root",visited = true),
-        Link("http://localhost:8080/a","A",visited = true),
-        Link("http://localhost:8080/b","B",visited = true),
-        Link("http://localhost:8080/c","C",visited = true),
-        Link("http://localhost:8080/d","D",visited = true)
-      )
+      val expectedSiteMap = Link("http://localhost:8080","root",visited = true).node(
+        Link("http://localhost:8080/a","A",visited = true).leaf,
+        Link("http://localhost:8080/b","B",visited = true).leaf,
+        Link("http://localhost:8080/c","C",visited = true).node(
+          Link("http://localhost:8080/d","D",visited = true).leaf
+        )
+      ).flatten
+      Crawler.start("http://localhost:8080").flatten shouldBe expectedSiteMap
     }
   }
 
